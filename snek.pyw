@@ -67,7 +67,7 @@ class Fud:
                 break
 
 class Game(tk.Toplevel):
-    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=300, fud_count: int=2) -> None:
+    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=250, fud_count: int=2) -> None:
         super().__init__(root, background='black')
         # Initialising TopLevel.
         self.resizable(0, 0)
