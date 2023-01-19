@@ -1,6 +1,4 @@
-# Python is bad with emojis so like yeah
 # Please don't roast my code ;-;
-# Adding tkinter
 import random
 from collections import deque
 import sqlite3
@@ -93,7 +91,7 @@ class Game(tk.Toplevel):
         # Initialising all the fud on the map.
         self.__fud = [Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()))]
         
-        for _ in range(fud_count - 1):
+        for i in range(fud_count - 1):
             self.__fud.append(Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()) + tuple(self.get_fud_coords())))
         
         self.__controls_to_directions = {'W': 'N', 'S': 'S', 'D': 'E', 'A': 'W'}
@@ -261,9 +259,11 @@ def main():
                 username_submit_button.state(['disabled'])
         
         # Closes the TopLevel that asks for username and starts the game.
-        def start_game():
+        def start_game(username: str):
+            global last_user
             username_screen.destroy()
-            game = Game(root, icon, username_text.get().capitalize())
+            last_user = username
+            game = Game(root, icon, username)
         
         # Initialising TopLevel.
         username_screen = tk.Toplevel(root, background='black')
@@ -275,7 +275,8 @@ def main():
         username_text = tk.StringVar(username_screen)
         username_text.trace('w', lambda *args: validate_username())
         username_entry = ttk.Entry(username_screen, textvariable=username_text)
-        username_submit_button = ttk.Button(username_screen, text='Start', width=13, state='disabled', command=start_game)
+        username_submit_button = ttk.Button(username_screen, text='Start', width=13, state='disabled', command=lambda : start_game(username_text.get().capitalize()))
+        username_text.set(last_user)
         
         username_label.grid(column=0, row=0, sticky='sw')
         username_entry.grid(column=0, row=1)
@@ -353,6 +354,7 @@ def main():
     style.configure('Entry.TLabel', font=('Arial', 8, 'italic'), foreground='#aaaaaa')
     style.configure('Heading.TLabel', font=('Arial', 20, 'bold', 'underline'))
     
+    
     # Setting up the Menu.
     text_label = ttk.Label(root, text='MENU', style='Heading.TLabel')
     play_button = ttk.Button(root, text='Play', width=20, command=play)
@@ -368,8 +370,10 @@ def main():
     
     root.mainloop()
 
-# Running the main function
+# Running the main function.
 if __name__ == '__main__':
+    # Initialising a global variable to keep track of the last username, empty string on startup.
+    last_user = ''
     cnx = sqlite3.connect('Databases\\snekscores.db')
     csr = cnx.cursor()
     main()
