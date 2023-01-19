@@ -1,20 +1,13 @@
 # Python is bad with emojis so like yeah
 # Please don't roast my code ;-;
 # Adding tkinter
-import os
 import random
 from collections import deque
-import json
-try:
-    from mysql import connector
-except ModuleNotFoundError:
-    # Installing mysql python connector if not found.
-    os.system('pip install mysql-connector-python')
-    from mysql import connector
+import sqlite3
 import tkinter as tk
 from tkinter import ttk
 import createdatabase
-# creating the database if not present.
+# creating the database and table if not present.
 createdatabase.main()
 
 class BodyNode:
@@ -76,7 +69,7 @@ class Fud:
                 break
 
 class Game(tk.Toplevel):
-    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=400, fud_count: int=2) -> None:
+    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=300, fud_count: int=2) -> None:
         super().__init__(root, background='black')
         # Initialising TopLevel.
         self.resizable(0, 0)
@@ -100,7 +93,7 @@ class Game(tk.Toplevel):
         # Initialising all the fud on the map.
         self.__fud = [Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()))]
         
-        for i in range(fud_count - 1):
+        for _ in range(fud_count - 1):
             self.__fud.append(Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()) + tuple(self.get_fud_coords())))
         
         self.__controls_to_directions = {'W': 'N', 'S': 'S', 'D': 'E', 'A': 'W'}
@@ -110,16 +103,14 @@ class Game(tk.Toplevel):
         self.__username = username
         
         # Starting a SQL connection.
-        with open('config.json', 'r') as f:
-            self.cnx = connector.connect(**json.load(f)['SQL'])
-        self.cnx.autocommit = True
-        self.csr = self.cnx.cursor(dictionary=True)
-        self.csr.execute('SELECT * FROM snekscores WHERE Username = %s', (username,))
+        self.cnx = sqlite3.connect('Databases\\snekscores.db')
+        self.csr = self.cnx.cursor()
+        self.csr.execute('SELECT * FROM snekscores WHERE Username = ?', (username,))
         self.data = self.csr.fetchall()
         # Display highscore if user has one.
         if len(self.data) > 0:
             self.data = self.data[0]
-            self.high_score_label = ttk.Label(self, text=f'Your High Score: {self.data["highScore"]}', style='Text.TLabel')
+            self.high_score_label = ttk.Label(self, text=f'Your High Score: {self.data[2]}', style='Text.TLabel')
             self.high_score_label.grid(column=0, row=0)
         # Display the game grid.
         self.game_text = tk.StringVar(self)
@@ -252,11 +243,13 @@ class Game(tk.Toplevel):
         self.score = len(self.__snake) - 1
         # If user does not have a highscore, highscore is inserted.
         if len(self.data) == 0:
-            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(%s, %s)', (self.__username, self.score))
+            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?)', (self.__username, self.score))
+            self.cnx.commit()
         # If user has a highscore, and their current score is more than their highscore, highscore is updated.
         else:
-            if self.score > self.data["highScore"]:
-                self.csr.execute('UPDATE snekscores SET highScore = %s WHERE Username = %s', (self.score, self.__username))
+            if self.score > self.data[2]:
+                self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.__username))
+                self.cnx.commit()
 
 def main():
     def play():
@@ -316,7 +309,7 @@ def main():
         # If there are highscores, display them.
         else:
             for rank in range(len(data)):
-                leaderboard_text.set(leaderboard_text.get() + f'{rank + 1}. {data[rank]["Username"]} - {data[rank]["highScore"]}\n')
+                leaderboard_text.set(leaderboard_text.get() + f'{rank + 1}. {data[rank][1]} - {data[rank][2]}\n')
         
         leaderboard_screen.mainloop()
 
@@ -377,8 +370,7 @@ def main():
 
 # Running the main function
 if __name__ == '__main__':
-    with open('config.json', 'r') as f:
-        cnx = connector.connect(**json.load(f)['SQL'])
-    csr = cnx.cursor(dictionary=True)
+    cnx = sqlite3.connect('Databases\\snekscores.db')
+    csr = cnx.cursor()
     main()
     cnx.close()
