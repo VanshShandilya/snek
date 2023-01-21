@@ -1,4 +1,6 @@
+# Python is bad with emojis so like yeah
 # Please don't roast my code ;-;
+# Adding tkinter
 import random
 from collections import deque
 import sqlite3
@@ -67,7 +69,7 @@ class Fud:
                 break
 
 class Game(tk.Toplevel):
-    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=250, fud_count: int=2) -> None:
+    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=300, fud_count: int=2) -> None:
         super().__init__(root, background='black')
         # Initialising TopLevel.
         self.resizable(0, 0)
@@ -98,7 +100,8 @@ class Game(tk.Toplevel):
         self.__black_list_directions = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E'}
         self.__move_queue = deque()
         self.__delay = delay_ms
-        self.__username = username
+        self.username = username
+        self.score = 0
         
         # Starting a SQL connection.
         self.cnx = sqlite3.connect('Databases\\snekscores.db')
@@ -110,12 +113,18 @@ class Game(tk.Toplevel):
             self.data = self.data[0]
             self.high_score_label = ttk.Label(self, text=f'Your High Score: {self.data[2]}', style='Text.TLabel')
             self.high_score_label.grid(column=0, row=0)
+        # Display the Score
+        self.score_text = tk.StringVar(self)
+        self.score_text.set(f'Score: {self.score}')
+        
+        self.score_label = ttk.Label(self, textvariable=self.score_text, style='Text.TLabel')
+        self.score_label.grid(column=0, row=1)
         # Display the game grid.
         self.game_text = tk.StringVar(self)
         self.game_label = ttk.Label(self, textvariable=self.game_text, style='Grid.TLabel')
         self.game_close_button = ttk.Button(self, text='Close', width=35, command=self.destroy)
         
-        self.game_label.grid(column=0, row=1)
+        self.game_label.grid(column=0, row=2)
         
         self.game_text.set(self.repr())
         
@@ -153,17 +162,11 @@ class Game(tk.Toplevel):
     
     def get_body_coords(self) -> dict:
         # Returns a dictionary with coordinates of body nodes as keys and the respective body nodes as values.
-        coords = dict()
-        for node in self.__snake:
-            coords[(node.x, node.y)] = node
-        return coords
+        return {(node.x, node.y): node for node in self.__snake}
     
     def get_fud_coords(self) -> dict:
         # Returns a dictionary with coordinates of fud as keys and the respective fud as values.
-        coords = dict()
-        for fud in self.__fud:
-            coords[(fud.x, fud.y)] = fud
-        return coords
+        return {(node.x, node.y): node for node in self.__fud}
     
     def move(self) -> None:
         # Updates the location of all body nodes to the location of the body node ahead of them.
@@ -199,14 +202,17 @@ class Game(tk.Toplevel):
             fudcoords[nextmove].replace(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()) + tuple(self.get_fud_coords()))
             tail = self.__snake[-1]
             self.__snake.append(BodyNode(tail.x, tail.y))
+            self.score += 1
+            self.score_text.set(f'Score: {self.score}')
             # Stops the game if the grid fills up so that the replace method for fud does not end up in an infinite loop.
-            if len(self.__snake) == self.sizex * self.sizey - 1 - len(self.__fud):
+            if self.score == self.sizex * self.sizey - 2 - len(self.__fud):
                 self.move()
                 self.high_score_label.grid_forget()
-                self.won_label = ttk.Label(self, text=f'YOU WIN!\nScore: {len(self.__snake) - 1}', style='Won.Text.TLabel')
+                self.won_label = ttk.Label(self, text='YOU WIN!', style='Won.Text.TLabel')
+                self.score_label.config(style='Won.Text.TLabel')
                 self.won_label.grid(column=0, row=0)
                 self.update_highscore()
-                self.game_close_button.grid(column=0, row=2)
+                self.game_close_button.grid(column=0, row=3)
                 return
         
         # Moves the snake by 1 frame.
@@ -226,10 +232,11 @@ class Game(tk.Toplevel):
                 else:
                     raise Err
             
-            self.lost_label = ttk.Label(self, text=f'Game Over!\nScore: {len(self.__snake) - 1}', style='Lost.Text.TLabel')
+            self.lost_label = ttk.Label(self, text='Game Over!', style='Lost.Text.TLabel')
+            self.score_label.config(style='Lost.Text.TLabel')
             self.lost_label.grid(column=0, row=0)
             self.update_highscore()
-            self.game_close_button.grid(column=0, row=2)
+            self.game_close_button.grid(column=0, row=3)
             return
         # If the game is not over, updates the display and schedules the next frame.
         else:
@@ -237,16 +244,14 @@ class Game(tk.Toplevel):
             self.after(self.__delay, self.update)
         
     def update_highscore(self):
-        # Get Score, 1 body node is provided by default.
-        self.score = len(self.__snake) - 1
         # If user does not have a highscore, highscore is inserted.
         if len(self.data) == 0:
-            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?)', (self.__username, self.score))
+            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?)', (self.username, self.score))
             self.cnx.commit()
         # If user has a highscore, and their current score is more than their highscore, highscore is updated.
         else:
             if self.score > self.data[2]:
-                self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.__username))
+                self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.username))
                 self.cnx.commit()
 
 def main():
@@ -370,9 +375,9 @@ def main():
     
     root.mainloop()
 
-# Running the main function.
+# Running the main function
 if __name__ == '__main__':
-    # Initialising a global variable to keep track of the last username, empty string on startup.
+    # Initialising a global variable to keep track of the last username, empty string on startup
     last_user = ''
     cnx = sqlite3.connect('Databases\\snekscores.db')
     csr = cnx.cursor()
