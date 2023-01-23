@@ -6,6 +6,7 @@ from collections import deque
 import sqlite3
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import createdatabase
 # creating the database and table if not present.
 createdatabase.main()
@@ -69,12 +70,16 @@ class Fud:
                 break
 
 class Game(tk.Toplevel):
-    def __init__(self, root: tk.Tk, icon: tk.PhotoImage, username: int, sizex: int=10, sizey: int=10, delay_ms: int=300, fud_count: int=2) -> None:
+    def __init__(self, root: tk.Tk, username: int, sizex: int=10, sizey: int=10, delay_ms: int=300, fud_count: int=2) -> None:
         super().__init__(root, background='black')
         # Initialising TopLevel.
         self.resizable(0, 0)
         self.title(f'Snek - {username}')
-        self.iconphoto(False, icon)
+        
+        self.__icon = Image.open('./Pictures/snek.png')
+        self.__icon.thumbnail((x//4 for x in self.__icon.size))
+        self.__icon = ImageTk.PhotoImage(self.__icon)
+        self.iconphoto(False, self.__icon)
         
         # Configuring style for widgets.
         self.__style = ttk.Style(self)
@@ -93,7 +98,7 @@ class Game(tk.Toplevel):
         # Initialising all the fud on the map.
         self.__fud = [Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()))]
         
-        for i in range(fud_count - 1):
+        for _ in range(fud_count - 1):
             self.__fud.append(Fud(self.sizex, self.sizey, ((self.__head.x, self.__head.y),) + tuple(self.get_body_coords()) + tuple(self.get_fud_coords())))
         
         self.__controls_to_directions = {'W': 'N', 'S': 'S', 'D': 'E', 'A': 'W'}
@@ -104,7 +109,7 @@ class Game(tk.Toplevel):
         self.score = 0
         
         # Starting a SQL connection.
-        self.cnx = sqlite3.connect('Databases\\snekscores.db')
+        self.cnx = sqlite3.connect('./Databases/snekscores.db')
         self.csr = self.cnx.cursor()
         self.csr.execute('SELECT * FROM snekscores WHERE Username = ?', (username,))
         self.data = self.csr.fetchall()
@@ -247,12 +252,11 @@ class Game(tk.Toplevel):
         # If user does not have a highscore, highscore is inserted.
         if len(self.data) == 0:
             self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?)', (self.username, self.score))
-            self.cnx.commit()
         # If user has a highscore, and their current score is more than their highscore, highscore is updated.
-        else:
-            if self.score > self.data[2]:
-                self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.username))
-                self.cnx.commit()
+        elif self.score > self.data[2]:
+            self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.username))
+        self.cnx.commit()
+        self.cnx.close()
 
 def main():
     def play():
@@ -268,7 +272,7 @@ def main():
             global last_user
             username_screen.destroy()
             last_user = username
-            game = Game(root, icon, username)
+            game = Game(root, username)
         
         # Initialising TopLevel.
         username_screen = tk.Toplevel(root, background='black')
@@ -347,7 +351,9 @@ def main():
     root.resizable(0, 0)
     
     # Loading and setting up the snek icon.
-    icon = tk.PhotoImage(file='Pictures\\snek.png')
+    icon = Image.open('./Pictures/snek.png')
+    icon.thumbnail((x//4 for x in icon.size))
+    icon = ImageTk.PhotoImage(icon)
     root.iconphoto(False, icon)
     
     # Configuring style for widgets.
@@ -361,7 +367,7 @@ def main():
     
     
     # Setting up the Menu.
-    text_label = ttk.Label(root, text='MENU', style='Heading.TLabel')
+    text_label = ttk.Label(root, text='MENU', image=icon, compound='left', style='Heading.TLabel')
     play_button = ttk.Button(root, text='Play', width=20, command=play)
     leaderboard_button = ttk.Button(root, text='Leaderboard', width=20, command=leaderboard)
     rules_button = ttk.Button(root, text='Controls And Rules', width=20, command=rules)
@@ -379,7 +385,7 @@ def main():
 if __name__ == '__main__':
     # Initialising a global variable to keep track of the last username, empty string on startup
     last_user = ''
-    cnx = sqlite3.connect('Databases\\snekscores.db')
+    cnx = sqlite3.connect('./Databases/snekscores.db')
     csr = cnx.cursor()
     main()
     cnx.close()
