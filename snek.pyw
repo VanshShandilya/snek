@@ -111,7 +111,7 @@ class Game(tk.Toplevel):
         # Starting a SQL connection.
         self.cnx = sqlite3.connect('./Databases/snekscores.db')
         self.csr = self.cnx.cursor()
-        self.csr.execute('SELECT * FROM snekscores WHERE Username = ?', (username,))
+        self.csr.execute('SELECT * FROM snekscores WHERE Username = ?;', (username,))
         self.data = self.csr.fetchall()
         # Display highscore if user has one.
         if len(self.data) > 0:
@@ -251,10 +251,10 @@ class Game(tk.Toplevel):
     def update_highscore(self):
         # If user does not have a highscore, highscore is inserted.
         if len(self.data) == 0:
-            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?)', (self.username, self.score))
+            self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?);', (self.username, self.score))
         # If user has a highscore, and their current score is more than their highscore, highscore is updated.
         elif self.score > self.data[2]:
-            self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?', (self.score, self.username))
+            self.csr.execute('UPDATE snekscores SET highScore = ? WHERE Username = ?;', (self.score, self.username))
         self.cnx.commit()
         self.cnx.close()
 
