@@ -161,9 +161,9 @@ class Game(tk.Toplevel):
         return self.represent
     
     def key_pressed(self, event):
-        # Keycodes - 87 - w, 65 - a, 83 - s, 68 - d
-        if event.keycode in (87, 65, 83, 68):
-            self.add_move(self.__controls_to_directions[event.keysym.upper()])
+        key = event.keysym.upper()
+        if key in ('W', 'A', 'S', 'D'):
+            self.add_move(self.__controls_to_directions[key])
     
     def get_body_coords(self) -> dict:
         # Returns a dictionary with coordinates of body nodes as keys and the respective body nodes as values.
