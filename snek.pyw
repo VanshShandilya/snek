@@ -260,9 +260,9 @@ def main():
         # Disables the start button when no username is provided.
         def validate_username():
             if len(username_text.get()) > 0:
-                username_submit_button.state(['!disabled'])
+                username_submit_button['state'] = tk.NORMAL
             else:
-                username_submit_button.state(['disabled'])
+                username_submit_button['state'] = tk.DISABLED
         
         # Closes the TopLevel that asks for username and starts the game.
         def start_game(username: str):
@@ -270,6 +270,10 @@ def main():
             username_screen.destroy()
             last_user = username
             game = Game(root, username)
+        
+        def key_pressed(event):
+            if event.keysym == 'Return' and str(username_submit_button['state']) == 'normal':
+                start_game(username_text.get().capitalize())
         
         # Initialising TopLevel.
         username_screen = tk.Toplevel(root, background='black')
@@ -281,12 +285,14 @@ def main():
         username_text = tk.StringVar(username_screen)
         username_text.trace('w', lambda *args: validate_username())
         username_entry = ttk.Entry(username_screen, textvariable=username_text)
-        username_submit_button = ttk.Button(username_screen, text='Start', width=13, state='disabled', command=lambda : start_game(username_text.get().capitalize()))
+        username_submit_button = ttk.Button(username_screen, text='Start', width=13, state=tk.DISABLED, command=lambda : start_game(username_text.get().capitalize()))
         username_text.set(last_user)
         
         username_label.grid(column=0, row=0, sticky='sw')
         username_entry.grid(column=0, row=1)
         username_submit_button.grid(column=0, row=2)
+        
+        username_screen.bind('<Key>', key_pressed)
         
         username_entry.focus()
 
