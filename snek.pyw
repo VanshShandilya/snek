@@ -75,11 +75,7 @@ class Game(tk.Toplevel):
         # Initialising TopLevel.
         self.resizable(0, 0)
         self.title(f'Snek - {username}')
-        
-        self.__icon = Image.open('./Pictures/snek.png')
-        self.__icon.thumbnail((x//4 for x in self.__icon.size))
-        self.__icon = ImageTk.PhotoImage(self.__icon)
-        self.iconphoto(False, self.__icon)
+        self.iconbitmap('./Pictures/snek.ico')
         
         # Configuring style for widgets.
         self.__style = ttk.Style(self)
@@ -212,6 +208,7 @@ class Game(tk.Toplevel):
             # Stops the game if the grid fills up so that the replace method for fud does not end up in an infinite loop.
             if self.score == self.sizex * self.sizey - 2 - len(self.__fud):
                 self.move()
+                self.game_text.set(self.repr())
                 self.high_score_label.grid_forget()
                 self.won_label = ttk.Label(self, text='YOU WIN!', style='Won.Text.TLabel')
                 self.score_label.config(style='Won.Text.TLabel')
@@ -277,7 +274,7 @@ def main():
         # Initialising TopLevel.
         username_screen = tk.Toplevel(root, background='black')
         username_screen.title('Snek - Play')
-        username_screen.iconphoto(False, icon)
+        username_screen.iconbitmap('./Pictures/snek.ico')
 
         # Setting up TopLevel.
         username_label = ttk.Label(username_screen, text='Username', style='Entry.TLabel')
@@ -297,7 +294,7 @@ def main():
         # Initialising TopLevel.
         leaderboard_screen = tk.Toplevel(root, background='black')
         leaderboard_screen.title('Snek - Leaderboard')
-        leaderboard_screen.iconphoto(False, icon)
+        leaderboard_screen.iconbitmap('./Pictures/snek.ico')
         
         # Setting up TopLevel.
         leaderboard_heading_label = ttk.Label(leaderboard_screen, text='LEADERBOARD', style='Heading.TLabel')
@@ -327,7 +324,7 @@ def main():
         # Initialising TopLevel.
         rules_screen = tk.Toplevel(root, background='black')
         rules_screen.title('Snek - Rules')
-        rules_screen.iconphoto(False, icon)
+        rules_screen.iconbitmap('./Pictures/snek.ico')
         
         # Setting up TopLevel.
         controls_heading_label = ttk.Label(rules_screen, text='CONTROLS', style='Heading.TLabel')
@@ -351,10 +348,10 @@ def main():
     root.resizable(0, 0)
     
     # Loading and setting up the snek icon.
-    icon = Image.open('./Pictures/snek.png')
-    icon.thumbnail((x//4 for x in icon.size))
-    icon = ImageTk.PhotoImage(icon)
-    root.iconphoto(False, icon)
+    logo = Image.open('./Pictures/snek.png')
+    logo.thumbnail((x//4 for x in logo.size))
+    logo = ImageTk.PhotoImage(logo)
+    root.iconbitmap('./Pictures/snek.ico')
     
     # Configuring style for widgets.
     style = ttk.Style(root)
@@ -367,7 +364,7 @@ def main():
     
     
     # Setting up the Menu.
-    text_label = ttk.Label(root, text='MENU', image=icon, compound='left', style='Heading.TLabel')
+    text_label = ttk.Label(root, text='MENU', image=logo, compound='left', style='Heading.TLabel')
     play_button = ttk.Button(root, text='Play', width=20, command=play)
     leaderboard_button = ttk.Button(root, text='Leaderboard', width=20, command=leaderboard)
     rules_button = ttk.Button(root, text='Controls And Rules', width=20, command=rules)
