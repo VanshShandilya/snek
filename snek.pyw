@@ -75,7 +75,7 @@ class Game(tk.Toplevel):
         # Initialising TopLevel.
         self.resizable(0, 0)
         self.title(f'Snek - {username}')
-        self.iconbitmap('./Pictures/snek.ico')
+        self.iconbitmap('./Images/snek.ico')
         
         # Configuring style for widgets.
         self.__style = ttk.Style(self)
@@ -105,7 +105,7 @@ class Game(tk.Toplevel):
         self.score = 0
         
         # Starting a SQL connection.
-        self.cnx = sqlite3.connect('./Databases/snekscores.db')
+        self.cnx = sqlite3.connect('./Database/snekscores.db')
         self.csr = self.cnx.cursor()
         self.csr.execute('SELECT * FROM snekscores WHERE Username = ?;', (username,))
         self.data = self.csr.fetchall()
@@ -278,7 +278,7 @@ def main():
         # Initialising TopLevel.
         username_screen = tk.Toplevel(root, background='black')
         username_screen.title('Snek - Play')
-        username_screen.iconbitmap('./Pictures/snek.ico')
+        username_screen.iconbitmap('./Images/snek.ico')
 
         # Setting up TopLevel.
         username_label = ttk.Label(username_screen, text='Username', style='Entry.TLabel')
@@ -300,7 +300,7 @@ def main():
         # Initialising TopLevel.
         leaderboard_screen = tk.Toplevel(root, background='black')
         leaderboard_screen.title('Snek - Leaderboard')
-        leaderboard_screen.iconbitmap('./Pictures/snek.ico')
+        leaderboard_screen.iconbitmap('./Images/snek.ico')
         
         # Setting up TopLevel.
         leaderboard_heading_label = ttk.Label(leaderboard_screen, text='LEADERBOARD', style='Heading.TLabel')
@@ -330,7 +330,7 @@ def main():
         # Initialising TopLevel.
         rules_screen = tk.Toplevel(root, background='black')
         rules_screen.title('Snek - Rules')
-        rules_screen.iconbitmap('./Pictures/snek.ico')
+        rules_screen.iconbitmap('./Images/snek.ico')
         
         # Setting up TopLevel.
         controls_heading_label = ttk.Label(rules_screen, text='CONTROLS', style='Heading.TLabel')
@@ -354,10 +354,10 @@ def main():
     root.resizable(0, 0)
     
     # Loading and setting up the snek icon.
-    logo = Image.open('./Pictures/snek.png')
+    logo = Image.open('./Images/snek.png')
     logo.thumbnail((x//4 for x in logo.size))
     logo = ImageTk.PhotoImage(logo)
-    root.iconbitmap('./Pictures/snek.ico')
+    root.iconbitmap('./Images/snek.ico')
     
     # Configuring style for widgets.
     style = ttk.Style(root)
@@ -388,7 +388,7 @@ def main():
 if __name__ == '__main__':
     # Initialising a global variable to keep track of the last username, empty string on startup
     last_user = ''
-    cnx = sqlite3.connect('./Databases/snekscores.db')
+    cnx = sqlite3.connect('./Database/snekscores.db')
     csr = cnx.cursor()
     main()
     cnx.close()
