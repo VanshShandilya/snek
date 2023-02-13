@@ -1,32 +1,36 @@
-# Python is bad with emojis so like yeah
 # Please don't roast my code ;-;
-# Adding tkinter
 import random
 from collections import deque
 import sqlite3
 import tkinter as tk
 from tkinter import ttk
-from PIL import Image, ImageTk
+try:
+    from PIL import Image, ImageTk
+except ModuleNotFoundError:
+    import os
+    os.system('pip install Pillow')
+    from PIL import Image, ImageTk
+    del os
 import createdatabase
 # creating the database and table if not present.
 createdatabase.main()
 
 class BodyNode:
     def __init__(self, x: int, y: int) -> None:
-        self.symbol = '[]'
+        self.__repr = '[]'
         self.x = x
         self.y = y
     
     def __repr__(self) -> str:
-        return self.symbol
+        return self.__repr
 
 class Head(BodyNode):
     def __init__(self, x: int, y: int) -> None:
         super().__init__(x, y)
-        self.symbol = '()'
+        self.__repr = '()'
         self.direction = 'E' # Direction will be N(North/Up), S(South/Down), E(East/Right), W(West/Left).
     
-    def move(self):
+    def move(self) -> None:
         # Move the head based on direction.
         if self.direction == 'N':
             self.y -= 1
@@ -50,7 +54,7 @@ class Head(BodyNode):
 
 class Fud:
     def __init__(self, gridx: int, gridy: int, black_list_coords: tuple) -> None:
-        self.symbol = '<>'
+        self.__repr = '<>'
         while True:
             # Get the random location that is not taken over by some other object.
             self.x = random.randrange(gridx)
@@ -59,7 +63,7 @@ class Fud:
                 break
     
     def __repr__(self) -> str:
-        return self.symbol
+        return self.__repr
     
     def replace(self, gridx: int, gridy: int, black_list_coords: tuple) -> None:
         while True:
@@ -82,9 +86,14 @@ class Game(tk.Toplevel):
         self.__style.configure('Text.TLabel', font=('Arial', 15, 'bold'))
         self.__style.configure('Lost.Text.TLabel', font=('Arial', 15, 'bold'), foreground='#ff0000')
         self.__style.configure('Won.Text.TLabel', font=('Arial', 15, 'bold'), foreground='#00ff00')
-        self.__style.configure('Grid.TLabel', font=('Courier New', 20, 'bold'))
+        # self.__style.configure('Grid.TLabel', font=('Courier New', 20, 'bold'))
         
-        self.grass = '░░'
+        self._head = Image.open('./Images/Assets/snek_head.png')
+        self._body = Image.open('./Images/Assets/snek_body.png')
+        self._fud = Image.open('./Images/Assets/apple.png')
+        self._grass = Image.open('./Images/Assets/back_drop.png')
+        self.ASSET_WIDTH = self._head.width
+        self.ASSET_HEIGHT = self._head.height
         self.sizex = sizex
         self.sizey = sizey
         # Head of the snake.
@@ -121,13 +130,12 @@ class Game(tk.Toplevel):
         self.score_label = ttk.Label(self, textvariable=self.score_text, style='Text.TLabel')
         self.score_label.grid(column=0, row=1)
         # Display the game grid.
-        self.game_text = tk.StringVar(self)
-        self.game_label = ttk.Label(self, textvariable=self.game_text, style='Grid.TLabel')
+        grid = ImageTk.PhotoImage(self.repr())
+        self.game_label = ttk.Label(self, image=grid)
+        self.game_label.image = grid
         self.game_close_button = ttk.Button(self, text='Close', width=35, command=self.destroy)
         
         self.game_label.grid(column=0, row=2)
-        
-        self.game_text.set(self.repr())
         
         # Keybinds for input.
         self.bind('<Key>', self.key_pressed)
@@ -138,25 +146,41 @@ class Game(tk.Toplevel):
         
         self.mainloop()
     
-    def repr(self) -> str:
-        self.represent = ''
+    def __repr__(self) -> str:
+        represent = ''
         bodycoords = self.get_body_coords()
         fudcoords = self.get_fud_coords()
         for y in range(self.sizey):
             # Creating the grid.
             for x in range(self.sizex):
                 if (x, y) in bodycoords:
-                    self.represent += str(bodycoords[(x, y)])
+                    represent += str(bodycoords[(x, y)])
                 elif (x, y) == (self.__head.x, self.__head.y):
-                    self.represent += str(self.__head)
+                    represent += str(self.__head)
                 elif (x, y) in fudcoords:
-                    self.represent += str(fudcoords[(x, y)])
+                    represent += str(fudcoords[(x, y)])
                 else:
-                    self.represent += self.grass
-            self.represent += '\n'
-        return self.represent
+                    represent += self._grass
+            represent += '\n'
+        return represent
     
-    def key_pressed(self, event):
+    def repr(self) -> Image.Image:
+        output = Image.new('RGBA', (self.sizex * self.ASSET_WIDTH, self.sizey * self.ASSET_HEIGHT))
+        bodycoords = self.get_body_coords()
+        fudcoords = self.get_fud_coords()
+        for y in range(self.sizey):
+            for x in range(self.sizex):
+                if (x, y) in bodycoords:
+                    output.paste(self._body, (x * self.ASSET_WIDTH, y * self.ASSET_HEIGHT))
+                elif (x, y) == (self.__head.x, self.__head.y):
+                    output.paste(self._head, (x * self.ASSET_WIDTH, y * self.ASSET_HEIGHT))
+                elif (x, y) in fudcoords:
+                    output.paste(self._fud, (x * self.ASSET_WIDTH, y * self.ASSET_HEIGHT))
+                else:
+                    output.paste(self._grass, (x * self.ASSET_WIDTH, y * self.ASSET_HEIGHT))
+        return output
+    
+    def key_pressed(self, event) -> None:
         key = event.keysym.upper()
         if key in ('W', 'A', 'S', 'D'):
             self.add_move(self.__controls_to_directions[key])
@@ -208,7 +232,9 @@ class Game(tk.Toplevel):
             # Stops the game if the grid fills up so that the replace method for fud does not end up in an infinite loop.
             if self.score == self.sizex * self.sizey - 2 - len(self.__fud):
                 self.move()
-                self.game_text.set(self.repr())
+                grid = ImageTk.PhotoImage(self.repr())
+                self.game_label.configure(image=grid)
+                self.game_label.image = grid
                 self.high_score_label.grid_forget()
                 self.won_label = ttk.Label(self, text='YOU WIN!', style='Won.Text.TLabel')
                 self.score_label.config(style='Won.Text.TLabel')
@@ -242,10 +268,12 @@ class Game(tk.Toplevel):
             return
         # If the game is not over, updates the display and schedules the next frame.
         else:
-            self.game_text.set(self.repr())
+            grid = ImageTk.PhotoImage(self.repr())
+            self.game_label.configure(image=grid)
+            self.game_label.image = grid
             self.after(self.__delay, self.update)
         
-    def update_highscore(self):
+    def update_highscore(self) -> None:
         # If user does not have a highscore, highscore is inserted.
         if len(self.data) == 0:
             self.csr.execute('INSERT INTO snekscores(Username, highScore) VALUES(?, ?);', (self.username, self.score))
@@ -255,23 +283,23 @@ class Game(tk.Toplevel):
         self.cnx.commit()
         self.cnx.close()
 
-def main():
-    def play():
+def main() -> None:
+    def play() -> None:
         # Disables the start button when no username is provided.
-        def validate_username():
+        def validate_username() -> None:
             if len(username_text.get()) > 0:
                 username_submit_button['state'] = tk.NORMAL
             else:
                 username_submit_button['state'] = tk.DISABLED
         
         # Closes the TopLevel that asks for username and starts the game.
-        def start_game(username: str):
+        def start_game(username: str) -> None:
             global last_user
             username_screen.destroy()
             last_user = username
             game = Game(root, username)
         
-        def key_pressed(event):
+        def key_pressed(event) -> None:
             if event.keysym == 'Return' and str(username_submit_button['state']) == 'normal':
                 start_game(username_text.get().capitalize())
         
@@ -296,7 +324,7 @@ def main():
         
         username_entry.focus()
 
-    def leaderboard():
+    def leaderboard() -> None:
         # Initialising TopLevel.
         leaderboard_screen = tk.Toplevel(root, background='black')
         leaderboard_screen.title('Snek - Leaderboard')
@@ -326,7 +354,7 @@ def main():
         
         leaderboard_screen.mainloop()
 
-    def rules():
+    def rules() -> None:
         # Initialising TopLevel.
         rules_screen = tk.Toplevel(root, background='black')
         rules_screen.title('Snek - Rules')

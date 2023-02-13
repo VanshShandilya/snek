@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-def main():
+def main() -> None:
     if not os.path.exists('./Database'):
         os.makedirs('./Database')
         print('Directory successfully made')
