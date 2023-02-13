@@ -12,4 +12,6 @@ os module is used to create the folder in which the Database is stored
 Run snek.pyw and it will open the main menu.
 
 ###### Credits
-The Assets were taken from Discord (Emojis)
+<sub>
+  The Assets were taken from Discord (Emojis)
+</sub>
