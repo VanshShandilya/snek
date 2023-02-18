@@ -88,10 +88,10 @@ class Game(tk.Toplevel):
         self.__style.configure('Won.Text.TLabel', font=('Arial', 15, 'bold'), foreground='#00ff00')
         # self.__style.configure('Grid.TLabel', font=('Courier New', 20, 'bold'))
         
-        self._head = Image.open('./Images/Assets/snek_head.png')
-        self._body = Image.open('./Images/Assets/snek_body.png')
-        self._fud = Image.open('./Images/Assets/apple.png')
-        self._grass = Image.open('./Images/Assets/back_drop.png')
+        self._head = Image.open('./Images/Modules/snek_head.png')
+        self._body = Image.open('./Images/Modules/snek_body.png')
+        self._fud = Image.open('./Images/Modules/apple.png')
+        self._grass = Image.open('./Images/Modules/back_drop.png')
         self.ASSET_WIDTH = self._head.width
         self.ASSET_HEIGHT = self._head.height
         self.sizex = sizex
@@ -362,7 +362,7 @@ def main() -> None:
         
         # Setting up TopLevel.
         controls_heading_label = ttk.Label(rules_screen, text='CONTROLS', style='Heading.TLabel')
-        controls_label = ttk.Label(rules_screen, text='W: Go Up\nD: Go Right\nS: Go Down\nA: Go Left')
+        controls_label = ttk.Label(rules_screen, text='W: Go Up\nA: Go Left\nS: Go Down\nD: Go Right')
         rules_heading_label = ttk.Label(rules_screen, text='RULES', style='Heading.TLabel')
         rules_label = ttk.Label(rules_screen, text='1. Running into walls -> Dead\n2. Running into yourself -> Dead\n3. Running into Food -> You get longer\nIf you fill up the screen, the game will end as that\'s the max possible length and points')
         rules_close_button = ttk.Button(rules_screen, text='Close', width=64, command=rules_screen.destroy)
