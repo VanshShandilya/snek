@@ -86,7 +86,6 @@ class Game(tk.Toplevel):
         self.__style.configure('Text.TLabel', font=('Arial', 15, 'bold'))
         self.__style.configure('Lost.Text.TLabel', font=('Arial', 15, 'bold'), foreground='#ff0000')
         self.__style.configure('Won.Text.TLabel', font=('Arial', 15, 'bold'), foreground='#00ff00')
-        # self.__style.configure('Grid.TLabel', font=('Courier New', 20, 'bold'))
         
         self._head = Image.open('./Images/Modules/snek_head.png')
         self._body = Image.open('./Images/Modules/snek_body.png')
